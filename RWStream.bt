@@ -76,7 +76,7 @@ typedef struct {
 
 LittleEndian();
 
-local uint32 testValue = ReadUInt(0x12);
+local uint32 testValue = ReadUInt(0xC);
 
 if (testValue > FileSize())
     BigEndian();
