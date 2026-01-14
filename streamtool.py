@@ -15,24 +15,25 @@ class StreamChunk:
     id: str
     size: int
     version: int
+    type: str = field(init=False)
     filename: str
+
+    def __post_init__(self):
+        self.type = type(self).__name__.removesuffix('Chunk').upper()
 
 
 @dataclass
 class CRDChunk(StreamChunk):
-    type: str = field(init=False, default='CRD')
     data: dict
 
 
 @dataclass
 class CodeChunk(StreamChunk):
-    type: str = field(init=False, default='CODE')
     data: bytes
 
 
 @dataclass
 class AssetChunk(StreamChunk):
-    type: str = field(init=False, default='ASSET')
     name: str
     guid: UUID
     asset_type: str
@@ -43,6 +44,7 @@ class AssetChunk(StreamChunk):
     extra: None | str | dict | list[dict]
 
     def __post_init__(self):
+        super().__post_init__()
         if self.size > 4206559400:
             # unk1 is 181-208 (0xB500-0xD000) on PSP and 181 (0xB500) elsewhere
             # unk2 is always 64187 (0xFABB)
@@ -199,6 +201,7 @@ class RWStream:
                 self.chunks.append(
                     AssetChunk(hex(chunk_id), size, version, filename, name, guid, asset_type, source_path,
                                target_path, separator, data, extra))
+
 
             elif chunk_id == 0x704:
                 filename = f'{self.name}_CODE_{idx}.dat'
