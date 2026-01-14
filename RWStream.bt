@@ -1,0 +1,87 @@
+//------------------------------------------------
+//--- 010 Editor v15.0.1 Binary Template
+//
+//      File: RWStream.bt
+//   Authors: hgdagon
+//   Version: 1.0
+//   Purpose: Parse Renderware stream. Only tested on HP4
+//  Category: Game
+// File Mask: *.str
+//  ID Bytes: 1C 07 00 00
+//   History: 
+//------------------------------------------------
+
+string GetChunkType(struct chunk &c) {
+    uint32 cid = c.chunk_id;
+    if (cid == 0x71C)
+        return "CRD chunk";
+    else if (cid == 0x716) {
+        if (c.chunk_size > 4206559400)
+            return c.metadata.asset_type + " chunk";
+        return "Asset chunk";
+        }
+    else if (cid == 0x704)
+        return "Code chunk";
+    string s;
+    SPrintf(s, "Unknown 0x%x chunk", cid);
+    return s;
+}
+
+typedef struct {
+    string  name;
+    local int pad_size = (4 - (sizeof(name) % 4)) % 4;
+    if (pad_size > 0) {
+        byte padding[pad_size] <hidden=true>;
+    }
+    uint32  amount;
+} cTable;
+
+typedef struct {
+    uint32  len_name <hidden=true>;
+    char  name[len_name] <read=this>;
+    GUID    asset_GUID;
+    uint32  len_type <hidden=true>;
+    char  asset_type[len_type] <read=this>;
+    uint32  len_spath <hidden=true>;
+    char  source_path[len_spath] <read=this>;
+    uint32  len_dpath <hidden=true>;
+    char  dest_path[len_dpath] <read=this>;
+    byte padding[4] <hidden=true>;
+} mdata;
+
+typedef struct {
+    local int wasBig = IsBigEndian();
+    LittleEndian();
+    uint32 chunk_id <format=hex>;
+    uint32 chunk_size;
+    uint32 chunk_version;
+    if (wasBig) BigEndian();
+    if (chunk_id == 0x71C) {
+        uint32  class_count;
+        cTable  class_table[class_count] <optimize=false>;
+        byte    padding[8] <hidden=true>;
+        }
+    else if (chunk_id == 0x716) {
+        uint32  metadata_size;
+        mdata   metadata;
+        uint32  data_size;
+        byte    data[data_size];
+        local int pad_size = (4 - (data_size % 4)) % 4;
+        if (chunk_size < 4206559400 && pad_size)
+            byte padding[pad_size] <hidden=true>;
+        }
+    else if (chunk_id == 0x704)
+        byte code[chunk_size];
+} chunk <name=GetChunkType>;
+
+LittleEndian();
+
+local uint32 testValue = ReadUInt(0x12);
+
+if (testValue > FileSize())
+    BigEndian();
+
+while(!FEof()) 
+{
+    chunk stream_chunk;
+}
