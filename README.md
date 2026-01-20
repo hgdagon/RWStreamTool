@@ -3,7 +3,7 @@ Experimental tool to unpack Renderware stream files from the game Harry Potter a
 
 Usage:
 ```
-./strtool.py <path/to/input/file_or_folder> [options]
+./streamtool.py [options] path/to/input/file_or_folder [path/to/output/file_or_folder]
 options:
     -r  Recursive
     -b  Build
